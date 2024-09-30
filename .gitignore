@@ -1,0 +1,10 @@
+## poetry
+poetry.lock
+pyproject.toml
+
+# py cache
+__pycache__/
+
+# env
+.env
+!.env.template
