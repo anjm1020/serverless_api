@@ -1,3 +1,5 @@
+import traceback
+
 from dotenv import load_dotenv
 from google_auth_oauthlib.flow import Flow
 from hooks.get_parameters import get_parameters
@@ -6,6 +8,10 @@ load_dotenv(override=True)
 
 
 def handler(event, context):
+
+    print(f"Event: {event}")
+    print(f"Context: {context}")
+
     dir = "/oauth/gmail"
     required_params = {
         "client_secret": "json",
@@ -33,8 +39,13 @@ def handler(event, context):
         state=state,
     )
 
-    flow.fetch_token(code=code)
-    credentials = flow.credentials
-    print(f"Credentials: {credentials}")
-
-    return {"statusCode": 302, "headers": {"Location": login_success_url}}
+    try:
+        flow.fetch_token(code=code)
+        credentials = flow.credentials
+        ## TODO : save credentials on db
+        ## TODO : put message on sqs
+        return {"statusCode": 302, "headers": {"Location": login_success_url}}
+    except Exception as e:
+        print(f"Error: {e}")
+        print(f"Traceback: {traceback.format_exc()}")
+        return {"statusCode": 500, "body": "Internal Server Error"}
