@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from google_auth_oauthlib.flow import Flow
 from hooks.get_parameters import get_parameters
 from hooks.gmail_api import get_profile
+from hooks.sqs_api import send_message
 
 load_dotenv(override=True)
 
@@ -14,38 +15,49 @@ class TokenAlreadyExists(Exception):
 
 
 def handler(event, context):
-    print(f"Event: {event}")
-    print(f"Context: {context}")
-
-    dir = "/oauth/gmail"
-    required_params = {
-        "client_secret": "json",
-        "config": "json",
-        "login_success_url": "string",
-    }
-
-    params = get_parameters(base_dir=dir, required_params=required_params)
-    client_secret = params["client_secret"]
-    oauth_config = params["config"]
-    login_success_url = params["login_success_url"]
-
-    scopes = oauth_config["scopes"]
-    redirect_uri = oauth_config["redirect_uri"]
-
-    code = event["queryStringParameters"]["code"]
-    state = event["queryStringParameters"]["state"]
-
-    if not code:
-        return {"statusCode": 400, "body": "Missing code parameter"}
-
-    flow = Flow.from_client_config(
-        client_config=client_secret,
-        scopes=scopes,
-        redirect_uri=redirect_uri,
-        state=state,
-    )
-
     try:
+        print(f"Event: {event}")
+        print(f"Context: {context}")
+
+        required_params = [
+            {
+                "name": "client_secret",
+                "key": "/oauth/gmail/client_secret",
+                "type": "json",
+            },
+            {"name": "config", "key": "/oauth/gmail/config", "type": "json"},
+            {
+                "name": "login_success_url",
+                "key": "/oauth/gmail/login_success_url",
+                "type": "string",
+            },
+            {
+                "name": "queue_url",
+                "key": "/oauth/common/credential_queue_url",
+                "type": "string",
+            },
+        ]
+
+        params = get_parameters(required_params=required_params)
+        client_secret = params["client_secret"]
+        oauth_config = params["config"]
+        login_success_url = params["login_success_url"]
+
+        scopes = oauth_config["scopes"]
+        redirect_uri = oauth_config["redirect_uri"]
+
+        code = event["queryStringParameters"]["code"]
+        state = event["queryStringParameters"]["state"]
+
+        if not code:
+            return {"statusCode": 400, "body": "Missing code parameter"}
+
+        flow = Flow.from_client_config(
+            client_config=client_secret,
+            scopes=scopes,
+            redirect_uri=redirect_uri,
+            state=state,
+        )
         print("Start Fetching token")
         flow.fetch_token(code=code)
 
@@ -80,6 +92,22 @@ def handler(event, context):
             },
         )
         print("Token stored successfully")
+
+        print("Sending message to SQS")
+        send_message(
+            queue_url=params["queue_url"],
+            message_body={
+                "user_id": user_id,
+                "account": profile["emailAddress"],
+                "service_type": "gmail",
+                "token_data": {
+                    "access_token": credentials.token,
+                    "refresh_token": credentials.refresh_token,
+                },
+            },
+        )
+        print("Message sent successfully")
+
         DB.destroy_connection(connection=conn)
         print("Connection successfully destroyed")
 
