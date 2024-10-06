@@ -12,11 +12,16 @@ def handler(event, context):
     scopes = oauth_config["scopes"]
     redirect_uri = oauth_config["redirect_uri"]
 
+    user_id = event["queryStringParameters"]["user_id"]
+
     flow = Flow.from_client_config(
         client_config=client_secret, scopes=scopes, redirect_uri=redirect_uri
     )
     authorization_url, _ = flow.authorization_url(
-        access_type="offline", include_granted_scopes="true"
+        access_type="offline",
+        include_granted_scopes="true",
+        state=user_id,
+        prompt="consent",
     )
 
     return {"statusCode": 302, "headers": {"Location": authorization_url}}
