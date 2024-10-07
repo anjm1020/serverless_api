@@ -1,6 +1,6 @@
 from google_auth_oauthlib.flow import Flow
 
-from hooks.sms_api import ParamRequest, get_parameters
+from hooks.ssm_api import ParamRequest, get_parameters
 
 
 def handler(event, context):

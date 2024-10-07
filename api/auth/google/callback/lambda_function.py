@@ -5,8 +5,8 @@ from func.get_account import get_account
 from google_auth_oauthlib.flow import Flow
 
 import hooks.credential_db as DB
-from hooks.sms_api import ParamRequest, get_parameters
 from hooks.sqs_api import send_message
+from hooks.ssm_api import ParamRequest, get_parameters
 
 load_dotenv(override=True)
 
@@ -139,7 +139,5 @@ def handler(event, context):
 
         return {
             "statusCode": 302,
-            "headers": {
-                "Location": f"{login_success_url}?error={error_msg}"
-            },  # if error occurs, redirect to login_success_url with error message
+            "headers": {"Location": f"{login_success_url}?error={error_msg}"},
         }
