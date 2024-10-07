@@ -5,9 +5,10 @@ from googleapiclient.discovery import build
 
 def get_profile(credentials: Credentials):
     try:
-        print("Start get profile")
-        service = build("gmail", "v1", credentials=credentials)
-        profile = service.users().getProfile(userId="me").execute()
+        print("Start get Drive profile")
+        service = build("drive", "v3", credentials=credentials)
+        profile = service.about().get(fields="user").execute()
+        print(f"Response Drive Profile: {profile}")
         return profile
 
     except RefreshError as e:

@@ -1,41 +1,58 @@
 import traceback
 
-import hooks.db_api as DB
 from dotenv import load_dotenv
+from func.get_account import get_account
 from google_auth_oauthlib.flow import Flow
-from hooks.get_parameters import get_parameters
-from hooks.gmail_api import get_profile
+
+import hooks.credential_db as DB
+from hooks.sms_api import ParamRequest, get_parameters
 from hooks.sqs_api import send_message
 
 load_dotenv(override=True)
 
 
-class TokenAlreadyExists(Exception):
-    pass
+class CustomException(Exception):
+    @classmethod
+    def message(cls):
+        return "internal_server_error"
+
+
+class CodeMissingException(CustomException):
+    @classmethod
+    def message(cls):
+        return "Code missing in query parameters"
+
+
+class TokenConflictException(CustomException):
+    @classmethod
+    def message(cls):
+        return "Token already exists"
 
 
 def handler(event, context):
     try:
+        service_type = event["queryStringParameters"]["service_type"]
         print(f"Event: {event}")
         print(f"Context: {context}")
-
-        required_params = [
-            {
-                "name": "client_secret",
-                "key": "/oauth/gmail/client_secret",
-                "type": "json",
-            },
-            {"name": "config", "key": "/oauth/gmail/config", "type": "json"},
-            {
-                "name": "login_success_url",
-                "key": "/oauth/gmail/login_success_url",
-                "type": "string",
-            },
-            {
-                "name": "queue_url",
-                "key": "/oauth/common/credential_queue_url",
-                "type": "string",
-            },
+        required_params: list[ParamRequest] = [
+            ParamRequest(
+                name="client_secret",
+                key=f"/oauth/{service_type}/client_secret",
+                type="json",
+            ),
+            ParamRequest(
+                name="config", key=f"/oauth/{service_type}/config", type="json"
+            ),
+            ParamRequest(
+                name="login_success_url",
+                key="/oauth/common/login_success_url",
+                type="string",
+            ),
+            ParamRequest(
+                name="queue_url",
+                key="/oauth/common/credential_queue_url",
+                type="string",
+            ),
         ]
 
         params = get_parameters(required_params=required_params)
@@ -50,7 +67,7 @@ def handler(event, context):
         state = event["queryStringParameters"]["state"]
 
         if not code:
-            return {"statusCode": 400, "body": "Missing code parameter"}
+            raise CodeMissingException()
 
         flow = Flow.from_client_config(
             client_config=client_secret,
@@ -58,14 +75,14 @@ def handler(event, context):
             redirect_uri=redirect_uri,
             state=state,
         )
+
         print("Start Fetching token")
         flow.fetch_token(code=code)
-
         credentials = flow.credentials
 
-        print("Start get profile")
-        profile = get_profile(credentials)
+        print("Start get account mail")
         user_id = state
+        account = get_account(credentials, service_type)
 
         conn = None
         conn = DB.get_connection(connection=conn)
@@ -73,19 +90,19 @@ def handler(event, context):
         if DB.exists_token(
             connection=conn,
             user_id=user_id,
-            account=profile["emailAddress"],
-            service_type="gmail",
+            account=account,
+            service_type=service_type,
         ):
             print("Token already exists")
             DB.destroy_connection(connection=conn)
-            raise TokenAlreadyExists("Token already exists")
+            raise TokenConflictException()
 
         print("Storing token")
         DB.store_new_token(
             connection=conn,
             user_id=user_id,
-            account=profile["emailAddress"],
-            service_type="gmail",
+            account=account,
+            service_type=service_type,
             token_data={
                 "access_token": credentials.token,
                 "refresh_token": credentials.refresh_token,
@@ -98,8 +115,8 @@ def handler(event, context):
             queue_url=params["queue_url"],
             message_body={
                 "user_id": user_id,
-                "account": profile["emailAddress"],
-                "service_type": "gmail",
+                "account": account,
+                "service_type": service_type,
                 "token_data": {
                     "access_token": credentials.token,
                     "refresh_token": credentials.refresh_token,
@@ -115,10 +132,14 @@ def handler(event, context):
     except Exception as e:
         print(f"Error: {e}")
         print(f"Traceback: {traceback.format_exc()}")
+
         error_msg = "internal_server_error"
-        if isinstance(e, TokenAlreadyExists):
-            error_msg = "token_already_exists"
+        if isinstance(e, CustomException):
+            error_msg = e.message()
+
         return {
             "statusCode": 302,
-            "headers": {"Location": f"{login_success_url}?error={error_msg}"},
+            "headers": {
+                "Location": f"{login_success_url}?error={error_msg}"
+            },  # if error occurs, redirect to login_success_url with error message
         }
