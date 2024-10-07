@@ -1,4 +1,0 @@
-google-auth
-google-auth-oauthlib
-boto3
-python-dotenv
