@@ -30,7 +30,7 @@ def handler(event, context):
         state=user_id,
     )
     authorization_url, _ = flow.authorization_url(
-        access_type="offline", include_granted_scopes="true"
+        access_type="offline", include_granted_scopes="true", prompt="consent"
     )
 
     return {"statusCode": 302, "headers": {"Location": authorization_url}}
