@@ -2,6 +2,8 @@ from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
+from hooks.google_api import get_credentials
+
 
 def get_profile(credentials: Credentials):
     try:
@@ -17,3 +19,8 @@ def get_profile(credentials: Credentials):
     except Exception as e:
         print(f"An error occurred: {e}")
         raise e
+
+
+def get_mail_and_attachments_list(credentials: Credentials):
+    google_credentials = get_credentials(credentials)
+    pass
