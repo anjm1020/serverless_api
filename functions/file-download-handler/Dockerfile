@@ -4,7 +4,7 @@ COPY ./functions/file-download-handler/requirements.txt .
 
 RUN pip install -r requirements.txt
 
-# COPY ./hooks/ ./hooks/
+COPY ./hooks/ ./hooks/
 
 COPY ./functions/file-download-handler/func/ ./func/
 

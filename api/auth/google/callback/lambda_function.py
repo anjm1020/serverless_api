@@ -97,6 +97,8 @@ def handler(event, context):
             DB.destroy_connection(connection=conn)
             raise TokenConflictException()
 
+        scopes = " ".join(scopes)
+
         print("Storing token")
         DB.store_new_token(
             connection=conn,
@@ -107,6 +109,7 @@ def handler(event, context):
                 "access_token": credentials.token,
                 "refresh_token": credentials.refresh_token,
             },
+            scopes=scopes,
         )
         print("Token stored successfully")
 
@@ -121,6 +124,7 @@ def handler(event, context):
                     "access_token": credentials.token,
                     "refresh_token": credentials.refresh_token,
                 },
+                "scopes": scopes,
             },
         )
         print("Message sent successfully")

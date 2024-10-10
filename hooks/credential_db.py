@@ -60,7 +60,7 @@ def exists_token(connection, user_id, account, service_type):
         sql = """
             SELECT COUNT(*) AS token_exists
             FROM credentials 
-            WHERE user_id = %s AND platform_account = %s AND platform_type = %s
+            WHERE user_id = %s AND platform_account = %s AND service_type = %s
         """
         cursor.execute(sql, (user_id, account, service_type))
         result = cursor.fetchone()
@@ -68,11 +68,11 @@ def exists_token(connection, user_id, account, service_type):
         return result["token_exists"] > 0
 
 
-def store_new_token(connection, user_id, account, service_type, token_data):
+def store_new_token(connection, user_id, account, service_type, token_data, scopes):
     with connection.cursor() as cursor:
         sql = """
-            INSERT INTO credentials (user_id, platform_account, platform_type, access_token, refresh_token)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO credentials (user_id, platform_account, service_type, access_token, refresh_token, scopes)
+            VALUES (%s, %s, %s, %s, %s, %s)
         """
         cursor.execute(
             sql,
@@ -82,6 +82,7 @@ def store_new_token(connection, user_id, account, service_type, token_data):
                 service_type,
                 token_data["access_token"],
                 token_data["refresh_token"],
+                scopes,
             ),
         )
         connection.commit()
