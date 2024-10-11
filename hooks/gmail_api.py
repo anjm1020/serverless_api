@@ -2,6 +2,9 @@ from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
+from entity.accessible_data import AccessibleData
+from entity.formatted_data import FormattedData
+
 _MAX_MAIL_LENGTH = 2000
 
 
@@ -51,6 +54,6 @@ def get_mail_and_attachments_list(credentials: Credentials):
     return mails
 
 
-def segmentation(entire_list):
+def segmentation(entire_list) -> tuple[list[AccessibleData], list[FormattedData]]:
     # All mail have to process
-    return entire_list, []
+    return [AccessibleData(access_info=mail) for mail in entire_list], []

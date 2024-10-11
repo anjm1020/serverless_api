@@ -3,8 +3,9 @@ import datetime
 from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseDownload
 
+from entity.accessible_data import AccessibleData
+from entity.formatted_data import FormattedData
 from hooks.ssm_api import ParamRequest, get_parameters
 
 
@@ -41,7 +42,7 @@ def get_file_list(credentials: Credentials):
                 corpora="user",
                 pageSize=1000,
                 spaces="drive",
-                fields="nextPageToken, files(id, name, fileExtension, webContentLink, mimeType, size)",
+                fields="nextPageToken, files(id, name, fileExtension, createdTime, modifiedTime, webViewLink, webContentLink, mimeType, size)",
                 pageToken=pageToken,
             )
             .execute()
@@ -53,7 +54,7 @@ def get_file_list(credentials: Credentials):
     return files
 
 
-def segmentation(file_list) -> tuple:
+def segmentation(file_list) -> tuple[list[AccessibleData], list[FormattedData]]:
 
     required_params: list[ParamRequest] = [
         ParamRequest(
@@ -65,16 +66,46 @@ def segmentation(file_list) -> tuple:
 
     params = get_parameters(required_params=required_params)
     supported_extensions = params["supproted_extensions"].split(" ")
-    print(f"supported_extensions: {supported_extensions}")
-    processable_data = []
-    non_processable_data = []
+
+    processable_data: list[AccessibleData] = []
+    non_processable_data: list[FormattedData] = []
     for curr in file_list:
-        if (
-            "fileExtension" not in curr
-            or curr["fileExtension"] not in supported_extensions
-        ):
-            non_processable_data.append(curr)
+
+        # TODO
+        # mimeType mapper
+        # (e.g. "application/vnd.google-apps.document" -> "google-docx")
+        formatted_data: FormattedData = FormattedData.non_processable_data(
+            title=curr["name"],
+            type=curr.get("mimeType", "unknown"),
+            created_at=curr.get("createdTime", ""),
+            original_location="google-drive",
+            file_updated_at=curr.get("modifiedTime", ""),
+            file_original_url=curr.get("webContentLink", curr.get("webViewLink")),
+            file_download_link=curr.get(
+                "webContentLink",
+                curr.get(
+                    "webViewLink",
+                ),
+            ),
+            file_extension=curr.get("fileExtension"),
+        )
+        if _is_supported(curr, supported_extensions):
+            accessible_data: AccessibleData = AccessibleData(
+                access_info={
+                    "id": curr["id"],
+                    "size": curr["size"],
+                    "meta": formatted_data.to_dict(),
+                },
+            )
+            processable_data.append(accessible_data)
         else:
-            processable_data.append(curr)
+            non_processable_data.append(formatted_data)
 
     return processable_data, non_processable_data
+
+
+def _is_supported(file, supported_extensions):
+    return (
+        file.get("fileExtension") is not None
+        and file.get("fileExtension") not in supported_extensions
+    )
