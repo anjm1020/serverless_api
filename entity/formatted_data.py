@@ -1,3 +1,7 @@
+import email.utils
+from hooks.encoding import encode_dict, decode_dict
+
+
 class FormattedData:
     # For Indexing Queue
     # If you have to add more properties, you can add them here.
@@ -51,6 +55,10 @@ class FormattedData:
     def message_to(self):
         return self._message_to
 
+    @property
+    def message_attachments(self):
+        return self._message_attachments
+
     #######################################
     # for processable Data
     @property
@@ -90,6 +98,34 @@ class FormattedData:
         base._file_extension = file_extension
         return base
 
+    @classmethod
+    def message_data(
+        cls,
+        title,
+        type,
+        created_at,
+        original_location,
+        message_from,
+        message_to,
+        message_attachments,
+        content,
+    ):
+        base = cls.common_properties(title, type, created_at, original_location)
+        base._message_from = message_from
+        base._message_to = message_to
+        base._message_attachments = message_attachments
+        base._content = content
+        return base
+
+    @classmethod
+    def parse_date_for_gmail(cls, date_str: str) -> str:
+        try:
+            dt = email.utils.parsedate_to_datetime(date_str)
+            return dt.strftime("%Y-%m-%d %H:%M")
+        except Exception as e:
+            print(f"Error parsing datetime: {date_str}")
+            return date_str
+
     def to_dict(self):
         data = {
             "title": self.title,
@@ -112,8 +148,10 @@ class FormattedData:
             data["message_from"] = self.message_from
         if self.message_to is not None:
             data["message_to"] = self.message_to
+        if self.message_attachments is not None:
+            data["message_attachments"] = self.message_attachments
 
-        return data
+        return encode_dict(data)
 
     @classmethod
     def from_dict(cls, data):
@@ -128,6 +166,7 @@ class FormattedData:
             file_extension=data.get("file_extension"),
             message_from=data.get("message_from"),
             message_to=data.get("message_to"),
+            message_attachments=data.get("message_attachments"),
             content=data.get("content"),
         )
 
@@ -144,6 +183,7 @@ class FormattedData:
         content=None,
         message_from=None,
         message_to=None,
+        message_attachments=None,
     ):
         self._title = title
         self._type = type
@@ -157,3 +197,6 @@ class FormattedData:
         self._content = content
         self._message_from = message_from
         self._message_to = message_to
+        self._message_attachments = message_attachments
+
+        self.__dict__ = decode_dict(self.__dict__)
