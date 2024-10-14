@@ -3,11 +3,15 @@ import traceback
 
 from func.get_entire_data import get_entire_data
 
+from entity.accessible_data import AccessibleData
+from entity.formatted_data import FormattedData
+from entity.user_credentials import UserCredentials
 from hooks.sqs_api import (
     ack_message,
     get_queue_url_from_arn,
     nack_message,
-    send_message,
+    send_accessible_data_message,
+    send_formatted_data_message,
 )
 from hooks.ssm_api import ParamRequest, get_parameters
 from hooks.with_timeout import TimeoutException, with_timeout
@@ -21,30 +25,39 @@ def process(record):
             type="string",
         ),
         ParamRequest(
-            name="download_queue_url",
-            key="/findy/config/download_queue_url",
+            name="accessible_queue_url",
+            key="/findy/config/accessible_queue_url",
             type="string",
         ),
     ]
 
     parmas = get_parameters(required_params=required_params)
     indexing_queue_url = parmas["indexing_queue_url"]
-    download_queue_url = parmas["download_queue_url"]
+    accessible_queue_url = parmas["accessible_queue_url"]
 
     credentials = record["body"]
     if not isinstance(credentials, dict):
         credentials = json.loads(credentials)
+    user_credentials = UserCredentials.from_dict(credentials)
 
-    processable_data, non_processable_data = get_entire_data(credentials=credentials)
+    processable_data: list[AccessibleData]
+    non_processable_data: list[FormattedData]
+
+    processable_data, non_processable_data = get_entire_data(
+        user_credentials=user_credentials
+    )
+
+    print(f"processable_data: {len(processable_data)}")
+    print(f"non_processable_data: {len(non_processable_data)}")
     for data in processable_data:
-        send_message(
-            queue_url=download_queue_url,
-            message_body={"data": data, "credentials": credentials},
+        send_accessible_data_message(
+            queue_url=accessible_queue_url,
+            message_body=data,
         )
     for data in non_processable_data:
-        send_message(
+        send_formatted_data_message(
             queue_url=indexing_queue_url,
-            message_body={"data": data, "credentials": credentials},
+            message_body=data,
         )
 
 

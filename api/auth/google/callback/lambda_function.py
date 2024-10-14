@@ -5,7 +5,8 @@ from func.get_account import get_account
 from google_auth_oauthlib.flow import Flow
 
 import hooks.credential_db as DB
-from hooks.sqs_api import send_message
+from entity.user_credentials import UserCredentials
+from hooks.sqs_api import send_message, send_user_credentials_message
 from hooks.ssm_api import ParamRequest, get_parameters
 
 load_dotenv(override=True)
@@ -114,19 +115,18 @@ def handler(event, context):
         print("Token stored successfully")
 
         print("Sending message to SQS")
-        send_message(
-            queue_url=params["queue_url"],
-            message_body={
-                "user_id": user_id,
-                "account": account,
-                "service_type": service_type,
-                "token_data": {
-                    "access_token": credentials.token,
-                    "refresh_token": credentials.refresh_token,
-                },
-                "scopes": scopes,
-            },
+        user_credentials: UserCredentials = UserCredentials(
+            user_id=user_id,
+            service_type=service_type,
+            service_account=account,
+            scopes=scopes,
+            access_token=credentials.token,
+            refresh_token=credentials.refresh_token,
         )
+        send_user_credentials_message(
+            queue_url=params["queue_url"], message_body=user_credentials
+        )
+
         print("Message sent successfully")
 
         DB.destroy_connection(connection=conn)

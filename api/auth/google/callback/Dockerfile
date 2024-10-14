@@ -4,6 +4,8 @@ COPY ./api/auth/google/callback/requirements.txt .
 
 RUN pip install -r requirements.txt
 
+COPY ./entity/ ./entity/
+
 COPY ./hooks/ ./hooks/
 
 COPY ./api/auth/google/callback/func/ ./func/

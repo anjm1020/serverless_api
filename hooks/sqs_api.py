@@ -2,6 +2,10 @@ import json
 
 import boto3
 
+from entity.accessible_data import AccessibleData
+from entity.formatted_data import FormattedData
+from entity.user_credentials import UserCredentials
+
 sqs = boto3.client("sqs")
 
 
@@ -11,6 +15,18 @@ def get_queue_url_from_arn(queue_arn):
     queue_name = queue_arn.split(":")[5].split("/")[-1]
 
     return f"https://sqs.{region}.amazonaws.com/{account_id}/{queue_name}"
+
+
+def send_accessible_data_message(queue_url, message_body: AccessibleData):
+    send_message(queue_url, message_body.to_dict())
+
+
+def send_formatted_data_message(queue_url, message_body: FormattedData):
+    send_message(queue_url, message_body.to_dict())
+
+
+def send_user_credentials_message(queue_url, message_body: UserCredentials):
+    send_message(queue_url, message_body.to_dict())
 
 
 def send_message(queue_url, message_body):

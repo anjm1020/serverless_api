@@ -1,0 +1,11 @@
+requests
+boto3
+google-api-python-client
+html2text
+lxml
+olefile
+PyPDF2
+python-docx
+python-pptx
+python-dotenv
+openai
