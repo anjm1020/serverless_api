@@ -153,6 +153,9 @@ class FormattedData:
 
         return encode_dict(data)
 
+    def to_dict_without_encoding(self):
+        return self.__dict__
+
     @classmethod
     def from_dict(cls, data):
         return cls(

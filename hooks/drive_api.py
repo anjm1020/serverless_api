@@ -1,8 +1,10 @@
+import io
 import datetime
 
 from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseDownload
 
 from entity.accessible_data import AccessibleData
 from entity.formatted_data import FormattedData
@@ -26,6 +28,16 @@ def get_profile(credentials: Credentials):
 
 
 def get_file_list(credentials: Credentials):
+    required_params: list[ParamRequest] = [
+        ParamRequest(
+            name="max_length",
+            key="/findy/config/google_drive_max_length",
+            type="int",
+        )
+    ]
+    params = get_parameters(required_params=required_params)
+    max_length = int(params["max_length"])
+
     service = build("drive", "v3", credentials=credentials)
 
     pageToken = None
@@ -48,6 +60,9 @@ def get_file_list(credentials: Credentials):
             .execute()
         )
         files.extend(response.get("files", []))
+        if len(files) >= max_length:
+            files = files[:max_length]
+            break
         pageToken = response.get("nextPageToken", None)
         if pageToken is None:
             break
@@ -107,5 +122,24 @@ def segmentation(file_list) -> tuple[list[AccessibleData], list[FormattedData]]:
 def _is_supported(file, supported_extensions):
     return (
         file.get("fileExtension") is not None
-        and file.get("fileExtension") not in supported_extensions
+        and file.get("fileExtension") in supported_extensions
+        and (
+            int(file.get("size")) <= 5 * 1024 * 1024
+            if file.get("size") is not None
+            else True
+        )
     )
+
+
+def download_file(credentials: Credentials, file_id: str, temp_dir: str):
+    service = build("drive", "v3", credentials=credentials)
+    request = service.files().get_media(fileId=file_id)
+
+    chunk_size = 5 * 1024 * 1024
+    with open(temp_dir, "wb") as f:
+        downloader = MediaIoBaseDownload(f, request, chunksize=chunk_size)
+        done = False
+        while not done:
+            status, done = downloader.next_chunk()
+
+    return temp_dir

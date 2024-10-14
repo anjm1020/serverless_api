@@ -47,6 +47,8 @@ def process(record):
         user_credentials=user_credentials
     )
 
+    print(f"processable_data: {len(processable_data)}")
+    print(f"non_processable_data: {len(non_processable_data)}")
     for data in processable_data:
         send_accessible_data_message(
             queue_url=accessible_queue_url,
