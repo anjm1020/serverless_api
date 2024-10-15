@@ -1,4 +1,5 @@
 from entity.formatted_data import FormattedData
+import unicodedata
 
 
 class IndexData:
@@ -36,24 +37,33 @@ class IndexData:
         index_data = {}
 
         if self._formatted_data.title:
-            index_data["title"] = {
-                "raw": self._formatted_data.title,
-                "vectors": self._title_vector,
-            }
+            index_data["title"] = self._formatted_data.title
+
+        if self._title_vector:
+            index_data["title_vector"] = self._title_vector
+
+        if self._content_vector:
+            index_data["content"] = []
+            for i, chunk in enumerate(self._content_vector):
+                index_data["content"].append(
+                    {"text": self._formatted_data.content[i], "vector": chunk}
+                )
 
         for field in [
-            "type",
-            "original_location",
-            "file_original_url",
-            "file_download_link",
-            "file_extension",
-            "message_from",
-            "message_to",
+            {"field": "type", "property": "data_type"},
+            {"field": "service", "property": "service"},
+            {"field": "original_location", "property": "original_location"},
+            {"field": "file_download_link", "property": "download_url"},
+            {"field": "file_extension", "property": "file_extension"},
+            {"field": "message_from", "property": "message_from"},
+            {"field": "message_to", "property": "message_to"},
         ]:
-            if hasattr(self._formatted_data, field) and getattr(
-                self._formatted_data, field
+            if hasattr(self._formatted_data, field["field"]) and getattr(
+                self._formatted_data, field["field"]
             ):
-                index_data[field] = getattr(self._formatted_data, field)
+                index_data[field["property"]] = getattr(
+                    self._formatted_data, field["field"]
+                )
 
         for date_field in ["created_at", "file_updated_at"]:
             if hasattr(self._formatted_data, date_field) and getattr(
@@ -65,11 +75,18 @@ class IndexData:
             hasattr(self._formatted_data, "message_attachments")
             and self._formatted_data.message_attachments
         ):
-            index_data["message_attachments"] = self._formatted_data.message_attachments
+            index_data["message_attachments"] = []
+            for attachment in self._formatted_data.message_attachments:
+                index_data["message_attachments"].append({"name": attachment})
 
-        index_data["chunks"] = []
-        for i, chunk in enumerate(self._content_vector):
-            index_data["chunks"].append(
-                {"raw": self._formatted_data.content[i], "vectors": chunk}
-            )
-        return index_data
+        return encode_dict(index_data)
+
+
+def encode_dict(data: dict):
+    for k, v in data.items():
+        if isinstance(v, str):
+            data[k] = unicodedata.normalize("NFC", v)
+            # data[k] = normlized.encode("utf-8").decode("utf-8")
+        elif isinstance(v, dict):
+            encode_dict(v)
+    return data

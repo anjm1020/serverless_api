@@ -1,4 +1,6 @@
+import datetime
 import email.utils
+from zoneinfo import ZoneInfo
 from hooks.encoding import encode_dict, decode_dict
 
 
@@ -20,6 +22,10 @@ class FormattedData:
         return self._type
 
     @property
+    def service_type(self):
+        return self._service_type
+
+    @property
     def original_location(self):
         return self._original_location
 
@@ -36,10 +42,6 @@ class FormattedData:
     @property
     def file_updated_at(self):
         return self._file_updated_at
-
-    @property
-    def file_original_url(self):
-        return self._file_original_url
 
     @property
     def file_extension(self):
@@ -65,6 +67,10 @@ class FormattedData:
     def content(self):
         return self._content
 
+    @content.setter
+    def content(self, value):
+        self._content = value
+
     @classmethod
     def common_properties(cls, title, type, created_at, original_location):
         return cls(
@@ -79,10 +85,10 @@ class FormattedData:
         cls,
         title,
         type,
+        service_type,
         created_at,
         original_location,
         file_updated_at,
-        file_original_url,
         file_download_link,
         file_extension,
     ):
@@ -92,8 +98,8 @@ class FormattedData:
             created_at=created_at,
             original_location=original_location,
         )
+        base._service_type = service_type
         base._file_updated_at = file_updated_at
-        base._file_original_url = file_original_url
         base._file_download_link = file_download_link
         base._file_extension = file_extension
         return base
@@ -103,6 +109,7 @@ class FormattedData:
         cls,
         title,
         type,
+        service_type,
         created_at,
         original_location,
         message_from,
@@ -111,6 +118,7 @@ class FormattedData:
         content,
     ):
         base = cls.common_properties(title, type, created_at, original_location)
+        base._service_type = service_type
         base._message_from = message_from
         base._message_to = message_to
         base._message_attachments = message_attachments
@@ -120,22 +128,23 @@ class FormattedData:
     @classmethod
     def parse_date_for_gmail(cls, date_str: str) -> str:
         try:
-            dt = email.utils.parsedate_to_datetime(date_str)
-            return dt.strftime("%Y-%m-%d %H:%M")
+            date_str = date_str.split(";")[-1].strip().split("(")[0].strip()
+            dt = datetime.datetime.strptime(date_str, "%a, %d %b %Y %H:%M:%S %z")
+            dt = dt.astimezone(ZoneInfo("Asia/Seoul"))
+            return dt.strftime("%Y-%m-%-d %H:%M:%S")
         except Exception as e:
-            print(f"Error parsing datetime: {date_str}")
+            print(f"Date time parsing error: {date_str}")
             return date_str
 
     def to_dict(self):
         data = {
             "title": self.title,
             "type": self.type,
+            "service_type": self.service_type,
             "original_location": self.original_location,
             "created_at": self.created_at,
         }
 
-        if self.file_original_url is not None:
-            data["file_original_url"] = self.file_original_url
         if self.file_updated_at is not None:
             data["file_updated_at"] = self.file_updated_at
         if self.file_download_link is not None:
@@ -161,10 +170,10 @@ class FormattedData:
         return cls(
             title=data.get("title"),
             type=data.get("type"),
+            service_type=data.get("service_type"),
             original_location=data.get("original_location"),
             created_at=data.get("created_at"),
             file_updated_at=data.get("file_updated_at"),
-            file_original_url=data.get("original_url"),
             file_download_link=data.get("file_download_link"),
             file_extension=data.get("file_extension"),
             message_from=data.get("message_from"),
@@ -179,7 +188,7 @@ class FormattedData:
         type,
         created_at,
         original_location,
-        file_original_url=None,
+        service_type=None,
         file_updated_at=None,
         file_download_link=None,
         file_extension=None,
@@ -190,10 +199,10 @@ class FormattedData:
     ):
         self._title = title
         self._type = type
+        self._service_type = service_type
         self._original_location = original_location
         self._created_at = created_at
 
-        self._file_original_url = file_original_url
         self._file_updated_at = file_updated_at
         self._file_download_link = file_download_link
         self._file_extension = file_extension

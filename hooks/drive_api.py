@@ -92,10 +92,10 @@ def segmentation(file_list) -> tuple[list[AccessibleData], list[FormattedData]]:
         formatted_data: FormattedData = FormattedData.non_processable_data(
             title=curr["name"],
             type=curr.get("mimeType", "unknown"),
-            created_at=curr.get("createdTime", ""),
-            original_location="google-drive",
-            file_updated_at=curr.get("modifiedTime", ""),
-            file_original_url=curr.get("webContentLink", curr.get("webViewLink")),
+            created_at=change_time_format(curr.get("createdTime", "")),
+            service_type="google-drive",
+            file_updated_at=change_time_format(curr.get("modifiedTime", "")),
+            original_location=curr.get("webViewLink", curr.get("webContentLink")),
             file_download_link=curr.get(
                 "webContentLink",
                 curr.get(
@@ -117,6 +117,12 @@ def segmentation(file_list) -> tuple[list[AccessibleData], list[FormattedData]]:
             non_processable_data.append(formatted_data)
 
     return processable_data, non_processable_data
+
+
+def change_time_format(time_str: str):
+    return datetime.datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S.%fZ").strftime(
+        "%Y-%m-%d %H:%M:%S"
+    )
 
 
 def _is_supported(file, supported_extensions):

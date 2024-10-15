@@ -7,7 +7,7 @@ from hooks.google_api import get_credentials
 from hooks.ssm_api import ParamRequest, get_parameters
 from hooks.gmail_api import get_mail_content
 from hooks.drive_api import download_file
-from func.parse_file import extract_text_from_file
+from func.parse_file import extract_text_from_file, split_text
 
 
 def access_data(data: AccessibleData):
@@ -24,6 +24,7 @@ def _gmail_access_data(accessible_data: AccessibleData):
     data: FormattedData = get_mail_content(
         google_credentials, accessible_data.access_info["id"]
     )
+    data.content = split_text(data.content)
     return data
 
 
