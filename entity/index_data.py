@@ -51,7 +51,7 @@ class IndexData:
 
         for field in [
             {"field": "type", "property": "data_type"},
-            {"field": "service", "property": "service"},
+            {"field": "service_type", "property": "service"},
             {"field": "original_location", "property": "original_location"},
             {"field": "file_download_link", "property": "download_url"},
             {"field": "file_extension", "property": "file_extension"},
@@ -65,11 +65,17 @@ class IndexData:
                     self._formatted_data, field["field"]
                 )
 
+        property_map = {
+            "created_at": "created_at",
+            "file_updated_at": "modified_at",
+        }
         for date_field in ["created_at", "file_updated_at"]:
             if hasattr(self._formatted_data, date_field) and getattr(
                 self._formatted_data, date_field
             ):
-                index_data[date_field] = getattr(self._formatted_data, date_field)
+                index_data[property_map[date_field]] = getattr(
+                    self._formatted_data, date_field
+                )
 
         if (
             hasattr(self._formatted_data, "message_attachments")
