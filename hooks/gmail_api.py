@@ -88,7 +88,8 @@ def get_mail_content(credentials: Credentials, mail_id: str) -> FormattedData:
         (header["value"] for header in headers if header["name"].lower() == "to"), ""
     )
     date_str = next(
-        (header["value"] for header in headers if header["name"].lower() == "date"), ""
+        (header["value"] for header in headers if header["name"].lower() == "received"),
+        "",
     )
     created_at = FormattedData.parse_date_for_gmail(date_str)
 
@@ -99,7 +100,7 @@ def get_mail_content(credentials: Credentials, mail_id: str) -> FormattedData:
         for part in mail["payload"]["parts"]:
             if part["mimeType"] == "text/plain":
                 encoded_data = part["body"]["data"]
-                body_plain = decode_text(encoded_data)
+                body_plain = extract_text_from_html(decode_text(encoded_data))
             elif part["mimeType"] == "text/html":
                 encoded_data = part["body"]["data"]
                 body_html = extract_text_from_html(decode_text(encoded_data))
@@ -117,7 +118,8 @@ def get_mail_content(credentials: Credentials, mail_id: str) -> FormattedData:
 
     formatted_data = FormattedData.message_data(
         title=subject,
-        type="email",
+        type="mail",
+        service_type="gmail",
         created_at=created_at,
         original_location="gmail",
         content=body,

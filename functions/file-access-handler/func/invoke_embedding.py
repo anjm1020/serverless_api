@@ -12,6 +12,14 @@ def invoke_embedding(data: FormattedData) -> IndexData:
     print(f"data.content: {len(data.content)}")
     title_vector = invoke_embedding_text(data.title)
 
+    if data.content is None:
+        return IndexData(
+            formatted_data=data, title_vector=title_vector, content_vector=[]
+        )
+
+    if not isinstance(data.content, list):
+        raise ValueError("Content Not Processed : Chunking is required")
+
     if len(data.content) == 0 or (
         len(data.content) == 1 and not data.content[0].strip()
     ):

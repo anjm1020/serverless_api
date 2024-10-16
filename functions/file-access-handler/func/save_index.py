@@ -14,9 +14,9 @@ def save_index(data: IndexData):
     INDEX_NAME = params["opensearch_index_name"]
     OPENSEARCH_HOST = params["opensearch_host"]
 
+    print(f"Indexed data: {data.to_index_format()}")
     auth = HTTPBasicAuth(USERNAME, PASSWORD)
 
-    print(f"data: {data}")
     try:
         url = f"{OPENSEARCH_HOST}/{INDEX_NAME}/_doc"
         response = requests.post(
@@ -29,6 +29,7 @@ def save_index(data: IndexData):
         print(f"Response status code: {response.status_code}")
         print(f"Response JSON: {response.json()}")
     except requests.exceptions.RequestException as e:
+        print(f"error with data: {data.to_index_format()}")
         raise e
 
 

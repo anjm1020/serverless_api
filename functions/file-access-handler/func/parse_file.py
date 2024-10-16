@@ -12,6 +12,12 @@ def extract_text_from_file(file_path):
     # return _minimize_newlines(text)
 
 
+def split_text(text, max_length=1024, overlap=100):
+    return [
+        _minimize_newlines(chunk) for chunk in _split_text(text, max_length, overlap)
+    ]
+
+
 def _minimize_newlines(text):
     lines = text.splitlines()
     minimized_text = [line.strip() for line in lines if line.strip()]
