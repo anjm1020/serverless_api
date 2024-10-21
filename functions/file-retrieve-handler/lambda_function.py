@@ -2,6 +2,7 @@ import json
 import traceback
 
 from func.get_entire_data import get_entire_data
+from hooks.data_mark import close_connection, get_redis_client, set_list_size, MarkData
 
 from entity.accessible_data import AccessibleData
 from entity.formatted_data import FormattedData
@@ -29,11 +30,21 @@ def process(record):
             key="/findy/config/accessible_queue_url",
             type="string",
         ),
+        ParamRequest(
+            name="redis_host",
+            key="/findy/config/redis_host",
+            type="string",
+        ),
+        ParamRequest(
+            name="redis_port",
+            key="/findy/config/redis_port",
+            type="string",
+        ),
     ]
 
-    parmas = get_parameters(required_params=required_params)
-    indexing_queue_url = parmas["indexing_queue_url"]
-    accessible_queue_url = parmas["accessible_queue_url"]
+    params = get_parameters(required_params=required_params)
+    indexing_queue_url = params["indexing_queue_url"]
+    accessible_queue_url = params["accessible_queue_url"]
 
     credentials = record["body"]
     if not isinstance(credentials, dict):
@@ -49,6 +60,23 @@ def process(record):
 
     print(f"processable_data: {len(processable_data)}")
     print(f"non_processable_data: {len(non_processable_data)}")
+
+    client = get_redis_client(
+        host=params["redis_host"],
+        port=int(params["redis_port"]),
+    )
+
+    set_list_size(
+        client,
+        mark_data=MarkData.for_meta(
+            user_id=user_credentials.user_id,
+            service=user_credentials.service_type,
+            service_account=user_credentials.service_account,
+            version="testing",
+        ),
+        size=len(processable_data) + len(non_processable_data),
+    )
+
     for data in processable_data:
         send_accessible_data_message(
             queue_url=accessible_queue_url,
