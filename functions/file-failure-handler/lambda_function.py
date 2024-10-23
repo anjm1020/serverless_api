@@ -1,19 +1,12 @@
 import json
 import traceback
 import uuid
-from entity.formatted_data import FormattedData
-from entity.index_data import IndexData
-from func.access_data import access_data
-from func.invoke_embedding import invoke_embedding
-from func.save_index import save_index
-from func.mark_complete import mark_complete
-
 from entity.accessible_data import AccessibleData
+from func.mark_complete import mark_complete
 from hooks.sqs_api import (
     ack_message,
     get_queue_url_from_arn,
     nack_message,
-    send_message,
 )
 from hooks.with_timeout import TimeoutException, with_timeout
 
@@ -24,12 +17,6 @@ def process(record):
         raw_data = json.loads(raw_data)
 
     data: AccessibleData = AccessibleData.from_dict(data=raw_data)
-    accessed_data: FormattedData = access_data(data)
-    print("Completed access data")
-    embeded_data: IndexData = invoke_embedding(accessed_data)
-    print("Completed invoke embedding")
-    save_index(embeded_data)
-    print("Completed save index")
 
     object_key = str(uuid.uuid4())
     mark_complete(
@@ -38,7 +25,7 @@ def process(record):
         service_account=data.credentials.service_account,
         version=data.version,
         obj_key=object_key,
-        success=True,
+        success=False,
     )
     return
 

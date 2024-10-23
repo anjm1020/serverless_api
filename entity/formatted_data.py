@@ -71,6 +71,14 @@ class FormattedData:
     def content(self, value):
         self._content = value
 
+    @property
+    def version(self):
+        return self._version
+
+    @version.setter
+    def version(self, value):
+        self._version = value
+
     @classmethod
     def common_properties(cls, title, type, created_at, original_location):
         return cls(
@@ -159,6 +167,8 @@ class FormattedData:
             data["message_to"] = self.message_to
         if self.message_attachments is not None:
             data["message_attachments"] = self.message_attachments
+        if self.version is not None:
+            data["version"] = self.version
 
         return encode_dict(data)
 
@@ -180,6 +190,7 @@ class FormattedData:
             message_to=data.get("message_to"),
             message_attachments=data.get("message_attachments"),
             content=data.get("content"),
+            version=data.get("version"),
         )
 
     def __init__(
@@ -196,6 +207,7 @@ class FormattedData:
         message_from=None,
         message_to=None,
         message_attachments=None,
+        version=None,
     ):
         self._title = title
         self._type = type
@@ -210,5 +222,5 @@ class FormattedData:
         self._message_from = message_from
         self._message_to = message_to
         self._message_attachments = message_attachments
-
+        self._version = version
         self.__dict__ = decode_dict(self.__dict__)

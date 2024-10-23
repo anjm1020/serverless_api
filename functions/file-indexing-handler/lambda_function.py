@@ -1,9 +1,9 @@
 import json
 import traceback
 import uuid
+
 from entity.formatted_data import FormattedData
 from entity.index_data import IndexData
-from func.access_data import access_data
 from func.invoke_embedding import invoke_embedding
 from func.save_index import save_index
 from func.mark_complete import mark_complete
@@ -23,14 +23,11 @@ def process(record):
     if not isinstance(raw_data, dict):
         raw_data = json.loads(raw_data)
 
-    data: AccessibleData = AccessibleData.from_dict(data=raw_data)
-    accessed_data: FormattedData = access_data(data)
-    print("Completed access data")
-    embeded_data: IndexData = invoke_embedding(accessed_data)
+    data: FormattedData = FormattedData.from_dict(data=raw_data)
+    embeded_data: IndexData = invoke_embedding(data)
     print("Completed invoke embedding")
     save_index(embeded_data)
     print("Completed save index")
-
     object_key = str(uuid.uuid4())
     mark_complete(
         user_id=data.credentials.user_id,

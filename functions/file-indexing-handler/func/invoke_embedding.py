@@ -8,8 +8,6 @@ from hooks.ssm_api import ParamRequest, get_parameters
 
 
 def invoke_embedding(data: FormattedData) -> IndexData:
-    print(f"data.title: {data.title}")
-    print(f"data.content: {len(data.content)}")
     title_vector = invoke_embedding_text(data.title)
 
     if data.content is None:
