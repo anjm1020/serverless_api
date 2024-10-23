@@ -60,10 +60,11 @@ def set_list_size(client: redis.Redis, mark_data: MarkData, size):
             version=mark_data.version,
         ),
         value=size,
+        ex=60 * 60 * 1,
     )
 
 
-def mark(client, mark_data: MarkData):
+def mark(client: redis.Redis, mark_data: MarkData):
     client.set(
         name=get_object_mark_key(
             user_id=mark_data.user_id,
@@ -73,6 +74,7 @@ def mark(client, mark_data: MarkData):
             object_id=mark_data.object_id,
         ),
         value="1" if mark_data.success else "0",
+        ex=60 * 60 * 1,
     )
 
 
