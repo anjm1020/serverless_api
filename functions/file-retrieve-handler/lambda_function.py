@@ -51,12 +51,21 @@ def process(record):
         credentials = json.loads(credentials)
     user_credentials = UserCredentials.from_dict(credentials)
 
+    # TODO : Get Version from User Table
+    current_version = "testing_version"
+
     processable_data: list[AccessibleData]
     non_processable_data: list[FormattedData]
 
     processable_data, non_processable_data = get_entire_data(
         user_credentials=user_credentials
     )
+
+    for data in processable_data:
+        data.version = current_version
+
+    for data in non_processable_data:
+        data.version = current_version
 
     print(f"processable_data: {len(processable_data)}")
     print(f"non_processable_data: {len(non_processable_data)}")
@@ -72,7 +81,7 @@ def process(record):
             user_id=user_credentials.user_id,
             service=user_credentials.service_type,
             service_account=user_credentials.service_account,
-            version="testing",
+            version=current_version,
         ),
         size=len(processable_data) + len(non_processable_data),
     )

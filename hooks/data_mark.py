@@ -76,7 +76,8 @@ def mark(client, mark_data: MarkData):
     )
 
 
-def is_process_ended(client, mark_data: MarkData):
+def is_process_ended(client: redis.Redis, mark_data: MarkData):
+    print("$$ start is_process_ended")
     list_key = get_list_key(
         user_id=mark_data.user_id,
         service=mark_data.service,
@@ -85,6 +86,7 @@ def is_process_ended(client, mark_data: MarkData):
     )
     list_size = client.get(list_key)
     if list_size is None:
+        print(f"No list size found: {list_key}")
         raise Exception("No list size found")
     list_size = int(list_size)
 
@@ -95,8 +97,20 @@ def is_process_ended(client, mark_data: MarkData):
         version=mark_data.version,
         object_id="*",
     )
-    object_mark_keys = client.keys(object_mark_key_pattern)
 
+    cursor = 0
+    object_mark_keys = []
+    while True:
+        cursor, keys = client.scan(
+            cursor=cursor, match=object_mark_key_pattern, count=100
+        )
+        print(f"$ keys: {keys}")
+        object_mark_keys.extend(keys)
+        if cursor == "0" or cursor == 0:
+            break
+
+    print(f"$$ object_mark_keys: {len(object_mark_keys)}")
+    print(f"$$ list_size: {list_size}")
     if len(object_mark_keys) != list_size:
         return False
 

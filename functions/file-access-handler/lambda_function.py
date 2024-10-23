@@ -1,6 +1,6 @@
 import json
 import traceback
-
+import uuid
 from entity.formatted_data import FormattedData
 from entity.index_data import IndexData
 from func.access_data import access_data
@@ -30,9 +30,16 @@ def process(record):
     print("Completed invoke embedding")
     save_index(embeded_data)
     print("Completed save index")
-    mark_complete(user_id=data.credentials.user_id, obj_key="test-object-key")
 
-    print(f"Success: process data: {record['messageId']}")
+    object_key = str(uuid.uuid4())
+    mark_complete(
+        user_id=data.credentials.user_id,
+        service=data.credentials.service_type,
+        service_account=data.credentials.service_account,
+        version=data.version,
+        obj_key=object_key,
+        success=True,
+    )
     return
 
 

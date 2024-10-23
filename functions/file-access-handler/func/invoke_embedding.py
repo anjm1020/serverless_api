@@ -26,11 +26,17 @@ def invoke_embedding(data: FormattedData) -> IndexData:
         return IndexData(
             formatted_data=data, title_vector=title_vector, content_vector=[]
         )
-
-    content_vectors = [invoke_embedding_text(chunk) for chunk in data.content]
-    return IndexData(
-        formatted_data=data, title_vector=title_vector, content_vector=content_vectors
-    )
+    try:
+        chunks = [chunk for chunk in data.content if chunk.strip()]
+        content_vectors = [invoke_embedding_text(chunk) for chunk in chunks]
+        return IndexData(
+            formatted_data=data,
+            title_vector=title_vector,
+            content_vector=content_vectors,
+        )
+    except Exception as e:
+        print(f"Error in invoke_embedding: {e}")
+        raise e
 
 
 def invoke_embedding_text(text: str):
