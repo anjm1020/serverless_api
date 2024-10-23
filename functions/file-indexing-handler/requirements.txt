@@ -1,0 +1,6 @@
+requests
+boto3
+google-api-python-client
+python-dotenv
+openai
+redis
