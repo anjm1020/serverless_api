@@ -2,6 +2,7 @@ import traceback
 
 from dotenv import load_dotenv
 from func.get_account import get_account
+from func.login import login
 from google_auth_oauthlib.flow import Flow
 
 import hooks.credential_db as DB
@@ -80,6 +81,10 @@ def handler(event, context):
         print("Start Fetching token")
         flow.fetch_token(code=code)
         credentials = flow.credentials
+
+        if service_type == "google-login":
+            print(login(credentials))
+            return {"statusCode": 302, "headers": {"Location": login_success_url}}
 
         print("Start get account mail")
         user_id = state

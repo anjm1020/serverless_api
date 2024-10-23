@@ -23,6 +23,8 @@ def handler(event, context):
 
     user_id = event["queryStringParameters"]["user_id"]
 
+    print(f"oauth_config: {oauth_config}")
+    print(f"client_secret: {client_secret}")
     flow = Flow.from_client_config(
         client_config=client_secret,
         scopes=scopes,
