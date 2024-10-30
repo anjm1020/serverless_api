@@ -1,10 +1,11 @@
-import requests
 import json
+
+import requests
 from openai import OpenAI
 
 from entity.formatted_data import FormattedData
 from entity.index_data import IndexData
-from hooks.ssm_api import ParamRequest, get_parameters
+from hooks.aws.ssm_api import ParamRequest, get_parameters
 
 
 def invoke_embedding(data: FormattedData) -> IndexData:

@@ -2,7 +2,7 @@ import datetime
 
 import jwt
 
-from hooks.ssm_api import ParamRequest, get_parameters
+from hooks.aws.ssm_api import ParamRequest, get_parameters
 
 params = get_parameters(
     [

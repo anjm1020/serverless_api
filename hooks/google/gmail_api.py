@@ -1,16 +1,16 @@
-import html2text
 import base64
 
+import html2text
 from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
 from entity.accessible_data import AccessibleData
 from entity.formatted_data import FormattedData
+from hooks.aws.ssm_api import ParamRequest, get_parameters
 
-from hooks.ssm_api import ParamRequest, get_parameters
 
-
+# TODO
 def get_profile(credentials: Credentials):
     try:
         print("Start get profile")
@@ -27,6 +27,7 @@ def get_profile(credentials: Credentials):
         raise e
 
 
+# TODO
 def get_mail_and_attachments_list(credentials: Credentials):
     required_params: list[ParamRequest] = [
         ParamRequest(
@@ -72,6 +73,7 @@ def segmentation(entire_list) -> tuple[list[AccessibleData], list[FormattedData]
     return [AccessibleData(access_info=mail) for mail in entire_list], []
 
 
+# TODO
 def get_mail_content(credentials: Credentials, mail_id: str) -> FormattedData:
     service = build("gmail", "v1", credentials=credentials)
     mail = service.users().messages().get(userId="me", id=mail_id).execute()

@@ -1,10 +1,12 @@
 from google_auth_oauthlib.flow import Flow
 
-from hooks.ssm_api import ParamRequest, get_parameters
+from hooks.aws.ssm_api import ParamRequest, get_parameters
 
 
 def handler(event, context):
     service_type = "google-login"
+    selected_job_type = event["queryStringParameters"]["job_type"]
+
     required_params: list[ParamRequest] = [
         ParamRequest(
             name="client_secret",
@@ -25,6 +27,7 @@ def handler(event, context):
         client_config=client_secret,
         scopes=scopes,
         redirect_uri=redirect_uri,
+        state=selected_job_type,
     )
     authorization_url, _ = flow.authorization_url(
         access_type="offline", include_granted_scopes="true", prompt="consent"

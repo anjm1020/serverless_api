@@ -1,10 +1,11 @@
 import json
-import requests
 
-from entity.data_dto import DataDTO
-from hooks.ssm_api import get_parameters, ParamRequest
+import requests
 from openai import OpenAI
 from requests.auth import HTTPBasicAuth
+
+from entity.data_dto import DataDTO
+from hooks.aws.ssm_api import ParamRequest, get_parameters
 
 
 def handler(event, context):

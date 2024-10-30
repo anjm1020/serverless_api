@@ -1,5 +1,5 @@
 from entity.user_credentials import UserCredentials
-from hooks.encoding import encode_dict, decode_dict
+from hooks.util.encoding import decode_dict, encode_dict
 
 
 class AccessibleData:

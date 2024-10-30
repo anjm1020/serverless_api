@@ -2,20 +2,25 @@ import json
 import traceback
 
 from func.get_entire_data import get_entire_data
-from hooks.data_mark import close_connection, get_redis_client, set_list_size, MarkData
 
 from entity.accessible_data import AccessibleData
 from entity.formatted_data import FormattedData
 from entity.user_credentials import UserCredentials
-from hooks.sqs_api import (
+from hooks.aws.sqs_api import (
     ack_message,
     get_queue_url_from_arn,
     nack_message,
     send_accessible_data_message,
     send_formatted_data_message,
 )
-from hooks.ssm_api import ParamRequest, get_parameters
-from hooks.with_timeout import TimeoutException, with_timeout
+from hooks.aws.ssm_api import ParamRequest, get_parameters
+from hooks.persistence.data_mark import (
+    MarkData,
+    close_connection,
+    get_redis_client,
+    set_list_size,
+)
+from hooks.util.with_timeout import TimeoutException, with_timeout
 
 
 def process(record):

@@ -5,10 +5,10 @@ from func.get_account import get_account
 from func.login import login
 from google_auth_oauthlib.flow import Flow
 
-import hooks.credential_db as DB
+import hooks.db.credential_db as DB
 from entity.user_credentials import UserCredentials
-from hooks.sqs_api import send_message, send_user_credentials_message
-from hooks.ssm_api import ParamRequest, get_parameters
+from hooks.aws.sqs_api import send_message, send_user_credentials_message
+from hooks.aws.ssm_api import ParamRequest, get_parameters
 
 load_dotenv(override=True)
 

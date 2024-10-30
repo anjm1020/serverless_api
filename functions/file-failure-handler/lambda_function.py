@@ -1,14 +1,16 @@
 import json
 import traceback
 import uuid
-from entity.accessible_data import AccessibleData
+
 from func.mark_complete import mark_complete
-from hooks.sqs_api import (
+
+from entity.accessible_data import AccessibleData
+from hooks.aws.sqs_api import (
     ack_message,
     get_queue_url_from_arn,
     nack_message,
 )
-from hooks.with_timeout import TimeoutException, with_timeout
+from hooks.util.with_timeout import TimeoutException, with_timeout
 
 
 def process(record):
