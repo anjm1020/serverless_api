@@ -1,3 +1,5 @@
+import json
+
 from google_auth_oauthlib.flow import Flow
 
 from hooks.ssm_api import ParamRequest, get_parameters
@@ -21,7 +23,11 @@ def handler(event, context):
     scopes = oauth_config["scopes"]
     redirect_uri = oauth_config["redirect_uri"]
 
-    user_id = event["queryStringParameters"]["user_id"]
+    print(f"event={event}")
+    print(f"context={context}")
+    requestCotext = event["requestContext"]
+    authroizer = requestCotext["authorizer"]
+    user_id = authroizer["lambda"]["user_uid"]
 
     flow = Flow.from_client_config(
         client_config=client_secret,
@@ -33,4 +39,10 @@ def handler(event, context):
         access_type="offline", include_granted_scopes="true", prompt="consent"
     )
 
-    return {"statusCode": 302, "headers": {"Location": authorization_url}}
+    body = json.dumps({"url": authorization_url})
+
+    return {
+        "statusCode": 200,
+        "headers": {"Content-Type": "application/json"},
+        "body": body,
+    }
