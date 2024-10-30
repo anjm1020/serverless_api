@@ -51,6 +51,12 @@ class UserCredentials:
             "refresh_token": self.refresh_token,
         }
 
+    def to_item_response(self):
+        return {
+            "service_type": self.service_type,
+            "service_account": self.service_account,
+        }
+
     @classmethod
     def from_dict(cls, data):
         return cls(
