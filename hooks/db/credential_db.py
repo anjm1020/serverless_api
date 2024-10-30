@@ -1,3 +1,5 @@
+import uuid
+
 import boto3
 import dns.resolver
 import pymysql
@@ -67,19 +69,20 @@ def exists_token(connection, user_id, account, service_type):
         """
         cursor.execute(sql, (user_id, account, service_type))
         result = cursor.fetchone()
-        print(result)
         return result["token_exists"] > 0
 
 
 def store_new_token(connection, user_id, account, service_type, token_data, scopes):
+    uid = str(uuid.uuid4())
     with connection.cursor() as cursor:
         sql = """
-            INSERT INTO credentials (user_id, service_account, service_type, access_token, refresh_token, scopes)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO credentials (uid, user_id, service_account, service_type, access_token, refresh_token, scopes)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
         cursor.execute(
             sql,
             (
+                uid,
                 user_id,
                 account,
                 service_type,
@@ -100,3 +103,14 @@ def get_list_by_user_id(connection, user_id):
         cursor.execute(sql, (user_id,))
         result = cursor.fetchall()
         return [UserCredentials(**a) for a in result]
+
+
+def delete_by_id(connection, cred_id, user_id):
+    with connection.cursor() as cursor:
+        sql = """
+            DELETE
+            FROM credentials
+            WHERE uid = %s and user_id = %s
+        """
+        cursor.execute(sql, (cred_id, user_id))
+        connection.commit()

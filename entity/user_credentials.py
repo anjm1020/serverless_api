@@ -9,6 +9,7 @@ class UserCredentials:
         scopes,
         access_token,
         refresh_token,
+        uid=None,
     ):
         self._user_id = user_id
         self._service_type = service_type
@@ -16,6 +17,8 @@ class UserCredentials:
         self._scopes = scopes
         self._access_token = access_token
         self._refresh_token = refresh_token
+
+        self._uid = uid
 
     @property
     def user_id(self):
@@ -53,6 +56,7 @@ class UserCredentials:
 
     def to_item_response(self):
         return {
+            "uid": self._uid,
             "service_type": self.service_type,
             "service_account": self.service_account,
         }
