@@ -1,16 +1,31 @@
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
-from hooks.account_db import (
+from hooks.db.account_db import (
+    Account,
     create_account,
-    get_connection,
     destroy_connection,
     get_account,
-    Account,
+    get_connection,
 )
 
 
-def login(credentials: Credentials):
+class LoginRequest:
+    credentials: Credentials
+    job_type: str
+
+    def __init__(self, credentials, job_type):
+        self.credentials = credentials
+        self.job_type = job_type
+
+
+def login(loginRequest: LoginRequest):
+
+    credentials = loginRequest.credentials
+    job_type = loginRequest.job_type
+
+    print(f"cred={credentials}, job_type={job_type}")
+
     connection = get_connection(None)
     account: Account = None
     try:
@@ -22,7 +37,7 @@ def login(credentials: Credentials):
 
         if account is None:
             print(f"Create account: {email}")
-            account = create_account(connection, "google", email)
+            account = create_account(connection, "google", email, job_type)
     finally:
         destroy_connection(connection)
         return account

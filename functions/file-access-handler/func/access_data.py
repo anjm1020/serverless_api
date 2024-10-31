@@ -1,13 +1,13 @@
 import boto3
+from func.parse_file import extract_text_from_file, split_text
 
 from entity.accessible_data import AccessibleData
 from entity.formatted_data import FormattedData
 from entity.user_credentials import UserCredentials
-from hooks.google_api import get_credentials
-from hooks.ssm_api import ParamRequest, get_parameters
-from hooks.gmail_api import get_mail_content
-from hooks.drive_api import download_file
-from func.parse_file import extract_text_from_file, split_text
+from hooks.aws.ssm_api import ParamRequest, get_parameters
+from hooks.google.drive_api import download_file
+from hooks.google.gmail_api import get_mail_content
+from hooks.google.google_api import get_credentials
 
 
 def access_data(data: AccessibleData):

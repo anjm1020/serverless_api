@@ -1,5 +1,5 @@
-from hooks.drive_api import get_profile as get_profile_drive
-from hooks.gmail_api import get_profile as get_profile_gmail
+from hooks.google.drive_api import get_profile as get_profile_drive
+from hooks.google.gmail_api import get_profile as get_profile_gmail
 
 
 def get_account(credentials, service_type):

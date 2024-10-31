@@ -1,4 +1,4 @@
-from hooks.login_token import validate
+from hooks.test.login_token import validate
 
 
 def handler(event, context):

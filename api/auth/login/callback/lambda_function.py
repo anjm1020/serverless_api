@@ -1,12 +1,12 @@
 import traceback
 
 from dotenv import load_dotenv
-from func.login import login
+from func.login import LoginRequest, login
 from google_auth_oauthlib.flow import Flow
 
-from hooks.account_db import Account
-from hooks.login_token import issue
-from hooks.ssm_api import ParamRequest, get_parameters
+from hooks.auth.login_token import issue
+from hooks.aws.ssm_api import ParamRequest, get_parameters
+from hooks.db.account_db import Account
 
 load_dotenv(override=True)
 
@@ -64,6 +64,8 @@ def handler(event, context):
         code = event["queryStringParameters"]["code"]
         state = event["queryStringParameters"]["state"]
 
+        print(f"state={state}")
+
         if not code:
             raise CodeMissingException()
 
@@ -78,7 +80,7 @@ def handler(event, context):
         flow.fetch_token(code=code)
         credentials = flow.credentials
 
-        account: Account = login(credentials)
+        account: Account = login(LoginRequest(credentials=credentials, job_type=state))
         token = issue(account.uid)
         return {
             "statusCode": 302,

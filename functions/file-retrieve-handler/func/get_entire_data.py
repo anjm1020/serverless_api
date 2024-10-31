@@ -1,12 +1,12 @@
 from entity.accessible_data import AccessibleData
 from entity.formatted_data import FormattedData
 from entity.user_credentials import UserCredentials
-from hooks.drive_api import get_file_list as drive_get_data_list
-from hooks.drive_api import segmentation as drive_segmentation
-from hooks.gmail_api import get_mail_and_attachments_list as gmail_get_data_list
-from hooks.gmail_api import segmentation as gmail_segmentation
-from hooks.google_api import get_credentials
-from hooks.ssm_api import ParamRequest, get_parameters
+from hooks.aws.ssm_api import ParamRequest, get_parameters
+from hooks.google.drive_api import get_file_list as drive_get_data_list
+from hooks.google.drive_api import segmentation as drive_segmentation
+from hooks.google.gmail_api import get_mail_and_attachments_list as gmail_get_data_list
+from hooks.google.gmail_api import segmentation as gmail_segmentation
+from hooks.google.google_api import get_credentials
 
 
 def get_entire_data(

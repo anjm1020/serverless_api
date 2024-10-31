@@ -2,20 +2,20 @@ import json
 import traceback
 import uuid
 
-from entity.formatted_data import FormattedData
-from entity.index_data import IndexData
 from func.invoke_embedding import invoke_embedding
-from func.save_index import save_index
 from func.mark_complete import mark_complete
+from func.save_index import save_index
 
 from entity.accessible_data import AccessibleData
-from hooks.sqs_api import (
+from entity.formatted_data import FormattedData
+from entity.index_data import IndexData
+from hooks.aws.sqs_api import (
     ack_message,
     get_queue_url_from_arn,
     nack_message,
     send_message,
 )
-from hooks.with_timeout import TimeoutException, with_timeout
+from hooks.util.with_timeout import TimeoutException, with_timeout
 
 
 def process(record):

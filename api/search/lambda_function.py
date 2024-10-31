@@ -1,14 +1,17 @@
 import json
-import requests
 
-from entity.data_dto import DataDTO
-from hooks.ssm_api import get_parameters, ParamRequest
+import requests
 from openai import OpenAI
 from requests.auth import HTTPBasicAuth
+
+from entity.data_dto import DataDTO
+from hooks.aws.ssm_api import ParamRequest, get_parameters
+from hooks.db.history_db import get_connection, save_history
 
 
 def handler(event, context):
     try:
+        user_id = event["requestContext"]["authorizer"]["lambda"]["user_uid"]
         query = event["queryStringParameters"]["query"]
 
         params = _get_params()
@@ -17,13 +20,22 @@ def handler(event, context):
         result = _invoke_search_request(
             query=query, q_vector=vector, params=params, filters=query_filters
         )
+
+        conn = get_connection(None)
+        save_history(conn, query=query, user_id=user_id)
+
         return {
             "statusCode": 200,
+            "headers": {"Content-Type": "application/json"},
             "body": json.dumps(_serialize_result(result), ensure_ascii=False),
         }
     except Exception as e:
         print(e)
-        return {"statusCode": 500, "body": str(e)}
+        return {
+            "statusCode": 500,
+            "headers": {"Content-Type": "application/json"},
+            "body": str(e),
+        }
 
 
 def _invoke_search_request(query: str, q_vector: list[float], params: dict, filters={}):

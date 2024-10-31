@@ -1,9 +1,10 @@
-import requests
 import json
-from requests.auth import HTTPBasicAuth
-from entity.index_data import IndexData
 
-from hooks.ssm_api import get_parameters, ParamRequest
+import requests
+from requests.auth import HTTPBasicAuth
+
+from entity.index_data import IndexData
+from hooks.aws.ssm_api import ParamRequest, get_parameters
 
 
 def save_index(data: IndexData):

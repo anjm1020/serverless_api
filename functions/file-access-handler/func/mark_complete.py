@@ -1,11 +1,11 @@
-from hooks.data_mark import (
+from hooks.aws.ssm_api import ParamRequest, get_parameters
+from hooks.persistence.data_mark import (
+    MarkData,
+    close_connection,
     get_redis_client,
     is_process_ended,
-    MarkData,
     mark,
-    close_connection,
 )
-from hooks.ssm_api import ParamRequest, get_parameters
 
 
 def mark_complete(
